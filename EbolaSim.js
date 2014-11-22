@@ -1,6 +1,23 @@
+var BURY_TIME = 1 * 24; // 1 day
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
     return Math.random() * 21 + 2;
+};
+var sampleTimeToHospital = function() {
+    // 2 days
+    return 2 * 24;
+};
+var sampleTimeToRecover = function() {
+    // 31 days
+    return 31 * 24;
+};
+var sampleTimeToDeath = function() {
+    // 18 days
+    return 18 * 24;
+};
+var sampleTimeToInfection = function() {
+    // 1.5 days
+    return 1.5 * 24;
 };
 
 var LatticeView = Backbone.View.extend({
@@ -88,9 +105,12 @@ var Simulation = function (m,n,el) {
     })
 };
 
-Simulation.prototype.set = function(i,j,state) {
+Simulation.prototype.set = function(i,j,state,t) {
     this.states[i][j] = state;
-    this.simview.lv.changeColor(i,j,COLORMAP[state])
+    var self = this;
+    window.setTimeout(function() {
+        self.simview.lv.changeColor(i,j,COLORMAP[state])
+    }, t * 100);
 };
 
 Simulation.prototype.start = function() {
@@ -114,9 +134,24 @@ Simulation.prototype.getNextEvent = function(i,t) {
     return nextEvent;
 };
 
+Simulation.prototype.withinBounds = function(i,j) {
+    return (0 <= i && i < this.m) && (0 <= j && j < this.n);
+};
+
+Simulation.prototype.getNeighbors = function(i,j) {
+    var nbrs = [];
+    var self = this;
+    var nbrs = _.filter([[i-1,j-1],[i-1,j],[i-1,j+1],
+                         [i  ,j-1],       ,[i  ,j+1],
+                         [i+1,j-1],[i+1,j],[i+1,j+1]],
+                         function(x) { return self.withinBounds(x[0],x[1]); });
+    return nbrs;
+};
+
 Simulation.prototype.processEvent = function(e) {
     this.set(e.i, e.j, e.type);
     this.t = e.t;
+    var self = this;
 
     switch (e.type) {
         case E.INFECT:
@@ -127,13 +162,35 @@ Simulation.prototype.processEvent = function(e) {
             break;
         case E.SYMPTOM:
             /* sample time till Hospital
-            /* sample time till Death directly prop to time till hosp
-            /* sample time till Recover inverse prop to time till hosp
-             * if time to recover < time to death, gen recover event, else gen death event
-             * if time to hospital < min(time to recover, time to die), gen hospital event.
+               sample time till Death directly prop to time till hosp
+               sample time till Recover inverse prop to time till hosp */
+            var t_h = sampleTimeToHospital();
+            var t_d = sampleTimeToDeath();
+            var t_r = sampleTimeToRecover();
+            /* if time to recover < time to death, gen recover event, else gen death event */
+            if (t_r < t_d)
+                this.eventQueue.push({i: e.i, j: e.j, type: E.RECOVER, t: e.t + t_r});
+            else
+                this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
+
+            /* if time to hospital < min(time to recover, time to die), gen hospital event. */
+            if (t_h < Math.min(t_r, t_d))
+                this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
+
             /* Change state of healthy neighbors to exposed */
+            var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
+            _.each(healthyNbrs, function(x) {
+                var i = x[0], j = x[1];
+                self.set(i,j,E.EXPOSED);
+            })
             /* for all exposed neighbors, sample time till infected.
              * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
+            _.each(healthyNbrs, function(x) {
+                var t_infect = sampleTimeToInfection();
+                if (t_infect < Math.min(t_h, t_r, t_d + BURY_TIME)) {
+                    self.eventQueue.push({i:x[0],j:x[1],type:E.INFECT,t:e.t + t_infect});
+                }
+            })
             break;
         case E.DEATH:
             break;
