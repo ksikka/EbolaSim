@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <style>
+            #simulation-container {
+                border: 1px black solid;
+                width: 600px;
+                height: 500px;
+            }
+        </style>
+        <style>
+            .simulation-lattice table {
+                border-collapse: collapse;
+            }
+            .simulation-lattice td,
+            .simulation-lattice tr,
+            .simulation-lattice th {
+                min-width:10px;
+                height:10px;
+                border:1px solid black;
+            }
+        </style>
+        <script src="libs/jquery-1.11.1.min.js"></script>
+        <script src="libs/underscore-min.js"></script>
+        <script src="libs/backbone-min.js"></script>
+        <script src="EbolaSim.js"></script>
+    </head>
+    <body>
+        <div id="simulation-container">
+        </div>
+        <script>
+        $('document').ready(function() {
+            var s = new Simulation(40, 100, $('#simulation-container'));
+            s.start();
+        });
+        </script>
+    </body>
+</html>
