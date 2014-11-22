@@ -90,7 +90,8 @@ COLORMAP[E.EXPOSE] = 'yellow';
 COLORMAP[E.INFECT] = 'red';
 COLORMAP[E.SYMPTOM] = '#8C001A';
 COLORMAP[E.DEATH] = 'black';
-COLORMAP[E.RECOVERED] = 'blue';
+COLORMAP[E.HOSPITAL] = 'blue';
+COLORMAP[E.RECOVERED] = 'white';
 
 var Simulation = function (m,n,el) {
     this.m = m;
@@ -149,7 +150,7 @@ Simulation.prototype.getNeighbors = function(i,j) {
 };
 
 Simulation.prototype.processEvent = function(e) {
-    this.set(e.i, e.j, e.type);
+    this.set(e.i, e.j, e.type, e.t);
     this.t = e.t;
     var self = this;
 
@@ -181,7 +182,7 @@ Simulation.prototype.processEvent = function(e) {
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
-                self.set(i,j,E.EXPOSED);
+                self.set(i,j,E.EXPOSED, e.t);
             })
             /* for all exposed neighbors, sample time till infected.
              * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
