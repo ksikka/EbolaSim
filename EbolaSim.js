@@ -182,7 +182,7 @@ Simulation.prototype.processEvent = function(e) {
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
-                self.set(i,j,E.EXPOSED, e.t);
+                self.set(i,j,E.EXPOSE, e.t);
             })
             /* for all exposed neighbors, sample time till infected.
              * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
