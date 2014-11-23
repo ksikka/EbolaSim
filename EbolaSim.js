@@ -59,16 +59,52 @@ var SimView = Backbone.View.extend({
         this.n = opts.n;
     },
 
+    updateTimeView: function(t) {
+        // t is number of hours
+        var days = Math.floor(t/24);
+        var hours = Math.floor(t - days*24);
+        this.$('.timeview').html('Time: ' + days + ' days and ' + hours + ' hours.');
+    },
+
+    updateStateCountView: function(stateCount) {
+        this.$('.statecountview').html('');
+        var $t = $('<table>'), $tr;
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Healthy:</td><td>'+stateCount[E.HEALTHY]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Exposed:</td><td>'+stateCount[E.EXPOSE]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Infected:</td><td>'+stateCount[E.INFECT]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Symptomatic:</td><td>'+stateCount[E.SYMPTOM]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Hospitalized:</td><td>'+stateCount[E.HOSPITAL]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Dead:</td><td>'+stateCount[E.DEATH]+'</td>');
+        $tr = $('<tr></tr>').appendTo($t);
+        $tr.append('<td>Recovered:</td><td>'+stateCount[E.RECOVER]+'</td>');
+        /*
+        $tr = $t.append('<tr><tr>');
+        $tr = $t.append('<tr><tr>');
+        (JSON.stringify(stateCount));
+        */
+        this.$('.statecountview').append($t);
+    },
+
     render: function() {
         this.$el.html('');
-        this.$el.append('<div id="lattice"></div>');
+
+        this.$el.append('<div class="lattice"></div>');
         if (!this.lv)
             this.lv = new LatticeView({
-                el:this.$('#lattice'),
+                el:this.$('.lattice'),
                 m:this.m,
                 n:this.n
             });
         this.lv.render();
+
+        this.$el.append('<div class="timeview"></div>');
+        this.$el.append('<div class="statecountview"></div>');
         return this;
     },
 });
@@ -81,7 +117,7 @@ var E = {
     SYMPTOM: 3,
     DEATH: 4,
     HOSPITAL: 5,
-    RECOVERED: 6,
+    RECOVER: 6,
 };
 
 var COLORMAP = {};
@@ -91,26 +127,47 @@ COLORMAP[E.INFECT] = 'red';
 COLORMAP[E.SYMPTOM] = '#8C001A';
 COLORMAP[E.DEATH] = 'black';
 COLORMAP[E.HOSPITAL] = 'blue';
-COLORMAP[E.RECOVERED] = 'white';
+COLORMAP[E.RECOVER] = 'white';
 
 var Simulation = function (m,n,el) {
     this.m = m;
     this.n = n;
     this.simview = new SimView({el:el, m:m, n:n});
     this.eventQueue = [];
+
     // m x n of healthy
     this.states = _.map(_.range(m), function() {
         return _.map(_.range(n), function() {
             return E.HEALTHY;
         });
     })
+
+    this.stateCount = {};
+    this.stateCount[E.HEALTHY] = m * n;
+    this.stateCount[E.EXPOSE] = 0;
+    this.stateCount[E.INFECT] = 0;
+    this.stateCount[E.SYMPTOM] = 0;
+    this.stateCount[E.DEATH] = 0;
+    this.stateCount[E.HOSPITAL] = 0;
+    this.stateCount[E.RECOVER] = 0;
 };
 
+/* This one function changes the state of the simulation, it also updates the UI. */
 Simulation.prototype.set = function(i,j,state,t) {
+    var oldState = this.states[i][j];
     this.states[i][j] = state;
     var self = this;
+
+    this.stateCount[oldState] --;
+    this.stateCount[state] ++;
+
+    var stateCount = _.clone(this.stateCount);
+
+    // Update UI
     window.setTimeout(function() {
         self.simview.lv.changeColor(i,j,COLORMAP[state])
+        self.simview.updateTimeView(t);
+        self.simview.updateStateCountView(stateCount);
     }, t * 100);
 };
 
@@ -198,7 +255,7 @@ Simulation.prototype.processEvent = function(e) {
         case E.HOSPITAL:
             // TODO generation infect events in hospital.
             break;
-        case E.RECOVERED:
+        case E.RECOVER:
             break;
         default:
             alert('no');
