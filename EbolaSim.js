@@ -1,7 +1,7 @@
 var BURY_TIME = 1 * 24; // 1 day
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
-    return Math.random() * 21 + 2;
+    return (Math.random() * (21-2) + 2) * 24;
 };
 var sampleTimeToHospital = function() {
     // 2 days
@@ -123,7 +123,7 @@ var E = {
 var COLORMAP = {};
 COLORMAP[E.HEALTHY] = 'white';
 COLORMAP[E.EXPOSE] = 'yellow';
-COLORMAP[E.INFECT] = 'red';
+COLORMAP[E.INFECT] = 'orange';
 COLORMAP[E.SYMPTOM] = '#8C001A';
 COLORMAP[E.DEATH] = 'black';
 COLORMAP[E.HOSPITAL] = 'blue';
@@ -168,7 +168,7 @@ Simulation.prototype.set = function(i,j,state,t) {
         self.simview.lv.changeColor(i,j,COLORMAP[state])
         self.simview.updateTimeView(t);
         self.simview.updateStateCountView(stateCount);
-    }, t * 100);
+    }, t * 25);
 };
 
 Simulation.prototype.start = function() {
