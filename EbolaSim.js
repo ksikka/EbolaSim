@@ -1,23 +1,37 @@
+/* Methods to sample fancy distributions */
+var sampleNormal = function(mean, std) {
+    return Math.random() * std + mean;
+};
+var sampleGeom = function(p) {
+    var i = 0, x;
+    while ((x = Math.random()) > p)
+        i ++;
+    return i;
+};
+
+
 var BURY_TIME = 1 * 24; // 1 day
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
     return (Math.random() * (21-2) + 2) * 24;
 };
-var sampleTimeToHospital = function() {
-    // 2 days
-    return 2 * 24;
-};
-var sampleTimeToRecover = function() {
-    // 31 days
-    return 31 * 24;
-};
-var sampleTimeToDeath = function() {
-    // 18 days
-    return 18 * 24;
-};
 var sampleTimeToInfection = function() {
     // 1.5 days
-    return 1.5 * 24;
+    var avgTimeBetweenContacts = Math.random() * 6 * 24;
+    var contactsTillTransmission = sampleGeom(1/4);
+    return contactsTillTransmission * avgTimeBetweenContacts;
+};
+var sampleTimeToHospital = function() {
+    // 2.5 days, with a variance of 2.
+    return sampleNormal(2.5,Math.pow(2,2)) * 24;
+};
+var sampleTimeToRecover = function() {
+    // 12 - 16 days
+    return sampleNormal(14, Math.pow(2,2)) * 24;
+};
+var sampleTimeToDeath = function() {
+    // 10 - 14 days
+    return sampleNormal(12, Math.pow(2,2)) * 24;
 };
 
 var LatticeView = Backbone.View.extend({
@@ -35,7 +49,7 @@ var LatticeView = Backbone.View.extend({
         var $t = $('<table></table>');
         var self = this;
         _.times(self.m, function(i) {
-            $r = $('<tr></tr>')
+            $r = $('<tr></tr>');
             _.times(self.n, function(j) {
                 $('<td></td>').appendTo($r);
             });
@@ -127,7 +141,7 @@ COLORMAP[E.INFECT] = 'orange';
 COLORMAP[E.SYMPTOM] = '#8C001A';
 COLORMAP[E.DEATH] = 'black';
 COLORMAP[E.HOSPITAL] = 'blue';
-COLORMAP[E.RECOVER] = 'white';
+COLORMAP[E.RECOVER] = 'pink';
 
 var Simulation = function (m,n,el) {
     this.m = m;
