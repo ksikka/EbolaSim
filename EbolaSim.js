@@ -10,6 +10,7 @@ var sampleGeom = function(p) {
 };
 
 
+/* Probability distributions for events */
 var BURY_TIME = 1 * 24; // 1 day
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
@@ -34,6 +35,27 @@ var sampleTimeToDeath = function() {
     return sampleNormal(12, Math.pow(2,2)) * 24;
 };
 
+/* Enum for state types, which may also be used as event types. */
+var E = {
+    HEALTHY: 0,
+    EXPOSE: 1,
+    INFECT: 2,
+    SYMPTOM: 3,
+    DEATH: 4,
+    HOSPITAL: 5,
+    RECOVER: 6,
+};
+
+var COLORMAP = {};
+COLORMAP[E.HEALTHY] = 'white';
+COLORMAP[E.EXPOSE] = 'yellow';
+COLORMAP[E.INFECT] = 'orange';
+COLORMAP[E.SYMPTOM] = '#8C001A';
+COLORMAP[E.DEATH] = 'black';
+COLORMAP[E.HOSPITAL] = 'blue';
+COLORMAP[E.RECOVER] = 'pink';
+
+/* UI Code */
 var LatticeView = Backbone.View.extend({
 
     initialize: function(opts) {
@@ -97,17 +119,14 @@ var SimView = Backbone.View.extend({
         $tr.append('<td>Dead:</td><td>'+stateCount[E.DEATH]+'</td>');
         $tr = $('<tr></tr>').appendTo($t);
         $tr.append('<td>Recovered:</td><td>'+stateCount[E.RECOVER]+'</td>');
-        /*
-        $tr = $t.append('<tr><tr>');
-        $tr = $t.append('<tr><tr>');
-        (JSON.stringify(stateCount));
-        */
+
         this.$('.statecountview').append($t);
     },
 
     render: function() {
         this.$el.html('');
 
+        this.$el.append('<h2>Population</h2>');
         this.$el.append('<div class="lattice"></div>');
         if (!this.lv)
             this.lv = new LatticeView({
@@ -117,32 +136,15 @@ var SimView = Backbone.View.extend({
             });
         this.lv.render();
 
+        //this.$el.append('<h2>Hospital</h2>');
+
         this.$el.append('<div class="timeview"></div>');
         this.$el.append('<div class="statecountview"></div>');
         return this;
     },
 });
 
-/* Enum for state types, which may also be used as event types. */
-var E = {
-    HEALTHY: 0,
-    EXPOSE: 1,
-    INFECT: 2,
-    SYMPTOM: 3,
-    DEATH: 4,
-    HOSPITAL: 5,
-    RECOVER: 6,
-};
-
-var COLORMAP = {};
-COLORMAP[E.HEALTHY] = 'white';
-COLORMAP[E.EXPOSE] = 'yellow';
-COLORMAP[E.INFECT] = 'orange';
-COLORMAP[E.SYMPTOM] = '#8C001A';
-COLORMAP[E.DEATH] = 'black';
-COLORMAP[E.HOSPITAL] = 'blue';
-COLORMAP[E.RECOVER] = 'pink';
-
+/* Simulation code */
 var Simulation = function (m,n,el) {
     this.m = m;
     this.n = n;
