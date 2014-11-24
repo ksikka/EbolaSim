@@ -164,11 +164,14 @@ Simulation.prototype.simulate = function() {
 Simulation.prototype.show = function(el) {
     this.simview = new SimView({el:el, m:this.m, n:this.n});
     this.simview.render();
+
+    this.simview.setData(this.eventHistory);
+
     var self = this;
     _.each(this.eventHistory, function(eh) {
         var e = eh[0], stateCount = eh[1];
         window.setTimeout(function() {
-            self.simview.update(e,stateCount);
+            self.simview.updateToState(e,stateCount);
         }, e.t * 25);
     });
 };
