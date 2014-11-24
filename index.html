@@ -20,15 +20,19 @@
         <script src="libs/jquery-1.11.1.min.js"></script>
         <script src="libs/underscore-min.js"></script>
         <script src="libs/backbone-min.js"></script>
+        <script src="SimView.js"></script>
         <script src="EbolaSim.js"></script>
+        <script src="utils.js"></script>
     </head>
     <body>
         <div id="simulation-container">
         </div>
         <script>
+        var s;
         $('document').ready(function() {
-            var s = new Simulation(40, 40, $('#simulation-container'));
-            s.start();
+            s = new Simulation(40, 40);
+            s.simulate();
+            s.show($('#simulation-container'));
         });
         </script>
     </body>

@@ -1,14 +1,4 @@
-/* Methods to sample fancy distributions */
-var sampleNormal = function(mean, std) {
-    return Math.random() * std + mean;
-};
-var sampleGeom = function(p) {
-    var i = 0, x;
-    while ((x = Math.random()) > p)
-        i ++;
-    return i;
-};
-
+/* Simulation code */
 
 /* Probability distributions for events */
 var BURY_TIME = 1 * 24; // 1 day
@@ -35,120 +25,9 @@ var sampleTimeToDeath = function() {
     return sampleNormal(12, Math.pow(2,2)) * 24;
 };
 
-/* Enum for state types, which may also be used as event types. */
-var E = {
-    HEALTHY: 0,
-    EXPOSE: 1,
-    INFECT: 2,
-    SYMPTOM: 3,
-    DEATH: 4,
-    HOSPITAL: 5,
-    RECOVER: 6,
-};
-
-var COLORMAP = {};
-COLORMAP[E.HEALTHY] = 'white';
-COLORMAP[E.EXPOSE] = 'yellow';
-COLORMAP[E.INFECT] = 'orange';
-COLORMAP[E.SYMPTOM] = '#8C001A';
-COLORMAP[E.DEATH] = 'black';
-COLORMAP[E.HOSPITAL] = 'blue';
-COLORMAP[E.RECOVER] = 'pink';
-
-/* UI Code */
-var LatticeView = Backbone.View.extend({
-
-    initialize: function(opts) {
-        this.m = opts.m;
-        this.n = opts.n;
-    },
-
-    changeColor: function(i,j,color) {
-        this.$('tr:nth-child('+(i+1)+') td:nth-child('+(j+1)+')').css('background-color',color);
-    },
-
-    drawGrid: function() {
-        var $t = $('<table></table>');
-        var self = this;
-        _.times(self.m, function(i) {
-            $r = $('<tr></tr>');
-            _.times(self.n, function(j) {
-                $('<td></td>').appendTo($r);
-            });
-            $r.appendTo($t);
-        });
-        this.$el.append($t);
-    },
-
-    render: function() {
-        this.$el.html('');
-        this.$el.addClass('simulation-lattice');
-        this.drawGrid();
-        return this;
-    }
-});
-
-var SimView = Backbone.View.extend({
-
-    initialize: function(opts) {
-        this.m = opts.m;
-        this.n = opts.n;
-    },
-
-    updateTimeView: function(t) {
-        // t is number of hours
-        var days = Math.floor(t/24);
-        var hours = Math.floor(t - days*24);
-        this.$('.timeview').html('Time: ' + days + ' days and ' + hours + ' hours.');
-    },
-
-    updateStateCountView: function(stateCount) {
-        this.$('.statecountview').html('');
-        var $t = $('<table>'), $tr;
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Healthy:</td><td>'+stateCount[E.HEALTHY]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Exposed:</td><td>'+stateCount[E.EXPOSE]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Infected:</td><td>'+stateCount[E.INFECT]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Symptomatic:</td><td>'+stateCount[E.SYMPTOM]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Hospitalized:</td><td>'+stateCount[E.HOSPITAL]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Dead:</td><td>'+stateCount[E.DEATH]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Recovered:</td><td>'+stateCount[E.RECOVER]+'</td>');
-
-        this.$('.statecountview').append($t);
-    },
-
-    render: function() {
-        this.$el.html('');
-
-        this.$el.append('<h2>Population</h2>');
-        this.$el.append('<div class="lattice"></div>');
-        if (!this.lv)
-            this.lv = new LatticeView({
-                el:this.$('.lattice'),
-                m:this.m,
-                n:this.n
-            });
-        this.lv.render();
-
-        //this.$el.append('<h2>Hospital</h2>');
-
-        this.$el.append('<div class="timeview"></div>');
-        this.$el.append('<div class="statecountview"></div>');
-        return this;
-    },
-});
-
-/* Simulation code */
-var Simulation = function (m,n,el) {
+var Simulation = function (m,n) {
     this.m = m;
     this.n = n;
-    this.simview = new SimView({el:el, m:m, n:n});
     this.eventQueue = [];
 
     // m x n of healthy
@@ -166,38 +45,22 @@ var Simulation = function (m,n,el) {
     this.stateCount[E.DEATH] = 0;
     this.stateCount[E.HOSPITAL] = 0;
     this.stateCount[E.RECOVER] = 0;
+
+    this.eventHistory = [];
 };
 
-/* This one function changes the state of the simulation, it also updates the UI. */
-Simulation.prototype.set = function(i,j,state,t) {
-    var oldState = this.states[i][j];
-    this.states[i][j] = state;
-    var self = this;
+/* Proxy to change the state of the simulation. */
+Simulation.prototype.set = function(e) {
+    // update states and state count
+    var oldState = this.states[e.i][e.j];
+    this.states[e.i][e.j] = e.type;
 
     this.stateCount[oldState] --;
-    this.stateCount[state] ++;
+    this.stateCount[e.type] ++;
 
+    // Store the info to be displayed on the UI later.
     var stateCount = _.clone(this.stateCount);
-
-    // Update UI
-    window.setTimeout(function() {
-        self.simview.lv.changeColor(i,j,COLORMAP[state])
-        self.simview.updateTimeView(t);
-        self.simview.updateStateCountView(stateCount);
-    }, t * 25);
-};
-
-Simulation.prototype.start = function() {
-    this.simview.render();
-
-    /* Start off by infecting one person */
-    var i0 = Math.floor(this.m/2);
-    var j0 = Math.floor(this.n/2);
-    this.eventQueue.push({i:i0, j:j0, type: E.INFECT, t:0});
-
-    /* Run Event Loop Until Max T (2 years for now) */
-    this.runEventLoop(2*365*24);
-
+    this.eventHistory.push([e, stateCount]);
 };
 
 Simulation.prototype.getNextEvent = function(i,t) {
@@ -223,7 +86,7 @@ Simulation.prototype.getNeighbors = function(i,j) {
 };
 
 Simulation.prototype.processEvent = function(e) {
-    this.set(e.i, e.j, e.type, e.t);
+    this.set(e);
     this.t = e.t;
     var self = this;
 
@@ -255,7 +118,7 @@ Simulation.prototype.processEvent = function(e) {
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
-                self.set(i,j,E.EXPOSE, e.t);
+                self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
             })
             /* for all exposed neighbors, sample time till infected.
              * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
@@ -286,4 +149,26 @@ Simulation.prototype.runEventLoop = function(maxT) {
     }
 }
 
+Simulation.prototype.simulate = function() {
 
+    /* Start off by infecting one person */
+    var i0 = Math.floor(this.m/2);
+    var j0 = Math.floor(this.n/2);
+    this.eventQueue.push({i:i0, j:j0, type: E.INFECT, t:0});
+
+    /* Run Event Loop Until Max T (2 years for now) */
+    this.runEventLoop(2*365*24);
+
+};
+
+Simulation.prototype.show = function(el) {
+    this.simview = new SimView({el:el, m:this.m, n:this.n});
+    this.simview.render();
+    var self = this;
+    _.each(this.eventHistory, function(eh) {
+        var e = eh[0], stateCount = eh[1];
+        window.setTimeout(function() {
+            self.simview.update(e,stateCount);
+        }, e.t * 25);
+    });
+};
