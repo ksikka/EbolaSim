@@ -102,7 +102,7 @@ var SimView = Backbone.View.extend({
     },
 
     updateToState: function(e, stateCount) {
-        this.lv.changeColor(e.i, e.j, COLORMAP[e.type])
+        this.plv.changeColor(e.i, e.j, COLORMAP[e.type])
         this.updateTimeView(e.t);
         this.updateStateCountView(stateCount);
     },
@@ -138,9 +138,12 @@ var SimView = Backbone.View.extend({
     },
 
     render: function() {
-        if (!this.lv)
-            this.lv = new LatticeView({ el:this.$('.lattice'), m:this.m, n:this.n });
-        this.lv.render();
+        if (!this.hlv)
+            this.hlv = new LatticeView({ el:this.$('.hosp-lattice'), m:2, n:this.n });
+        if (!this.plv)
+            this.plv = new LatticeView({ el:this.$('.pop-lattice'), m:this.m, n:this.n });
+        this.plv.render();
+        this.hlv.render();
 
         /*
         this.$el.append('<div class="controls"></div>');
