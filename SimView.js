@@ -138,10 +138,6 @@ var SimView = Backbone.View.extend({
     },
 
     render: function() {
-        this.$el.html('');
-
-        this.$el.append('<h2>Population</h2>');
-        this.$el.append('<div class="lattice"></div>');
         if (!this.lv)
             this.lv = new LatticeView({ el:this.$('.lattice'), m:this.m, n:this.n });
         this.lv.render();
@@ -153,10 +149,6 @@ var SimView = Backbone.View.extend({
         this.cv.render();
         */
 
-        this.$el.append('<div class="timeview"></div>');
-        this.$el.append('<input class="timeslider" type="range">');
-
-        this.$el.append('<div class="statecountview"></div>');
         return this;
     },
 });
