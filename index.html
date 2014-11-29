@@ -29,9 +29,9 @@
             .simulation-lattice td,
             .simulation-lattice tr,
             .simulation-lattice th {
-                min-width:9px;
-                height:9px;
-                line-height:9px;
+                min-width:8px;
+                height:6px;
+                line-height:6px;
                 border:1px solid black;
             }
             .event-stream-item {
@@ -85,9 +85,11 @@
         <script>
         var s;
         $('document').ready(function() {
-            s = new Simulation(40, 40);
+            var m = 40;
+            var n = 40;
+            s = new Simulation(m, n);
             s.simulate();
-            var svc = new SimViewController($('#simulation-container'), 40, 40, s.eventHistory);
+            var svc = new SimViewController($('#simulation-container'), m, n, s.eventHistory);
         });
         </script>
     </body>
