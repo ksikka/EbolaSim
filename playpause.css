@@ -131,3 +131,120 @@ li a:active:before {
     border-color:#730800;
     background:transparent;
 }
+
+/* FAST FORWARD
+------------------------------------------------------------------------------------------------------------------------------- */
+
+.fforward a:before {
+    left:1px;
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-left-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.fforward a:after {
+    left:7px;
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-left-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.fforward a:hover:before,
+.fforward a:focus:before,
+.fforward a:active:before {
+    border-left-color:#730800;
+    background:transparent;
+}
+
+.fforward a:hover:after,
+.fforward a:focus:after,
+.fforward a:active:after {
+    border-left-color:#730800;
+}
+
+/* FAST REWIND
+------------------------------------------------------------------------------------------------------------------------------- */
+
+.frewind a:before {
+    left:-6px;
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-right-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.frewind a:after {
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-right-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.frewind a:hover:before,
+.frewind a:focus:before,
+.frewind a:active:before {
+    border-right-color:#730800;
+    background:transparent;
+}
+
+.frewind a:hover:after,
+.frewind a:focus:after,
+.frewind a:active:after {
+    border-right-color:#730800;
+}
+
+/* JUMP FORWARD
+------------------------------------------------------------------------------------------------------------------------------- */
+
+.next a:before {
+    left:9px;
+    width:2px;
+    height:10px;
+    margin-top:-4px;
+}
+
+.next a:after {
+    left:2px;
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-left-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.next a:hover:after,
+.next a:focus:after,
+.next a:active:after {
+    border-left-color:#730800;
+}
+
+/* JUMP REWIND
+------------------------------------------------------------------------------------------------------------------------------- */
+
+.prev a:before {
+    left:2px;
+    width:2px;
+    height:10px;
+    margin-top:-4px;
+}
+
+.prev a:after {
+    left:-3px;
+    border:5px solid transparent;
+    border-width:5px 7px;
+    border-right-color:#c55500;
+    margin-top:-4px;
+    background:transparent;
+}
+
+.prev a:hover:after,
+.prev a:focus:after,
+.prev a:active:after {
+    border-right-color:#730800;
+}

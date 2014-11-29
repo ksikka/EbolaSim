@@ -58,6 +58,9 @@ Simulation.prototype.set = function(e) {
     this.stateCount[oldState] --;
     this.stateCount[e.type] ++;
 
+    // For convenience in updating the UI, copy oldState to the event.
+    e.oldState = oldState;
+
     // Store the info to be displayed on the UI later.
     var stateCount = _.clone(this.stateCount);
     this.eventHistory.push([e, stateCount]);
@@ -159,14 +162,11 @@ Simulation.prototype.simulate = function() {
     /* Run Event Loop Until Max T (2 years for now) */
     this.runEventLoop(2*365*24);
 
+
 };
 
-Simulation.prototype.show = function(el) {
-    this.simview = new SimView({el:el, m:this.m, n:this.n});
-    this.simview.render();
 
-    this.simview.setData(this.eventHistory);
-
+/*
     var self = this;
     _.each(this.eventHistory, function(eh) {
         var e = eh[0], stateCount = eh[1];
@@ -174,4 +174,4 @@ Simulation.prototype.show = function(el) {
             self.simview.updateToState(e,stateCount);
         }, e.t * 25);
     });
-};
+*/
