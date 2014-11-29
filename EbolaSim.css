@@ -1,0 +1,39 @@
+.event-rate-slider {
+    width: 100%;
+}
+
+.simulation-lattice table {
+    box-sizing: border-box;
+    border-collapse: collapse;
+}
+
+.legend td.color,
+.simulation-lattice td,
+.simulation-lattice tr,
+.simulation-lattice th {
+    padding:1vw;
+    line-height:0px;
+    border:1px solid black;
+}
+@media screen and (min-width: 48em) {
+    .legend td.color,
+    .simulation-lattice td,
+    .simulation-lattice tr,
+    .simulation-lattice th {
+        padding:0.6vw;
+    }
+}
+
+
+.l-healthy { background-color: white; }
+.l-exposed { background-color: yellow; }
+.l-infected { background-color: orange; }
+.l-symptomatic { background-color: #8C001A; }
+.l-hospitalized { background-color: blue; }
+.l-recovered { background-color: pink; }
+.l-dead { background-color: black; }
+
+textarea.data {
+    font-family: Consolas, "courier new";
+    font-size: 10pt;
+}

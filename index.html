@@ -5,6 +5,8 @@
         <link rel="stylesheet" href="libs/grids-responsive-min-0.5.0.css">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <link rel="stylesheet" href="EbolaSim.css">
+
         <style>
             #simulation-container {
                 margin: 2vh;
@@ -19,48 +21,6 @@
                     margin: 6vh;
                 }
             }
-        </style>
-        <style>
-            .event-rate-slider {
-                width: 100%;
-            }
-
-            .simulation-lattice table {
-                box-sizing: border-box;
-                border-collapse: collapse;
-            }
-
-            .legend td.color,
-            .simulation-lattice td,
-            .simulation-lattice tr,
-            .simulation-lattice th {
-                padding:1vw;
-                line-height:0px;
-                border:1px solid black;
-            }
-            @media screen and (min-width: 48em) {
-                .legend td.color,
-                .simulation-lattice td,
-                .simulation-lattice tr,
-                .simulation-lattice th {
-                    padding:0.6vw;
-                }
-            }
-
-
-            .l-healthy { background-color: white; }
-            .l-exposed { background-color: yellow; }
-            .l-infected { background-color: orange; }
-            .l-symptomatic { background-color: #8C001A; }
-            .l-hospitalized { background-color: blue; }
-            .l-recovered { background-color: pink; }
-            .l-dead { background-color: black; }
-
-            textarea.data {
-                font-family: Consolas, "courier new";
-                font-size: 10pt;
-            }
-
         </style>
         <script src="libs/jquery-1.11.1.min.js"></script>
         <script src="libs/jquery-ui-1.11.2.custom/jquery-ui.min.js"></script>
