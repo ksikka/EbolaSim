@@ -8,7 +8,17 @@
 
         <style>
             #simulation-container {
-                padding: 1%;
+                margin: 2vh;
+            }
+            @media screen and (min-width: 35.5em) {
+                #simulation-container {
+                    margin: 4vh;
+                }
+            }
+            @media screen and (min-width: 48em) {
+                #simulation-container {
+                    margin: 6vh;
+                }
             }
         </style>
         <style>
@@ -33,9 +43,6 @@
                 border:1px solid black;
             }
             @media screen and (min-width: 48em) {
-                #simulation-container {
-                    margin: 30px;
-                }
                 .simulation-lattice td,
                 .simulation-lattice tr,
                 .simulation-lattice th {
