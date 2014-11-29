@@ -35,7 +35,7 @@ var Simulation = function (m,n) {
         return _.map(_.range(n), function() {
             return E.HEALTHY;
         });
-    })
+    });
 
     this.stateCount = {};
     this.stateCount[E.HEALTHY] = m * n;
@@ -165,13 +165,25 @@ Simulation.prototype.simulate = function() {
 
 };
 
+Simulation.prototype.exportCSV = function () {
+    var csvLines = [];
+    csvLines.push('time,healthy,exposed,infected,symptomatic,hospitalized,recovered,dead');
 
-/*
-    var self = this;
-    _.each(this.eventHistory, function(eh) {
-        var e = eh[0], stateCount = eh[1];
-        window.setTimeout(function() {
-            self.simview.updateToState(e,stateCount);
-        }, e.t * 25);
+    // copies then reverses
+    var reversedHistory = this.eventHistory.slice();
+    reversedHistory.reverse();
+
+    _.each(reversedHistory, function(eh) {
+        var stateCount = eh[1];
+        csvLines.push([eh[0].t,
+                       stateCount[E.HEALTHY],
+                       stateCount[E.EXPOSE],
+                       stateCount[E.INFECT],
+                       stateCount[E.SYMPTOM],
+                       stateCount[E.HOSPITAL],
+                       stateCount[E.RECOVER],
+                       stateCount[E.DEATH]].join(','));
     });
-*/
+
+    return csvLines.join('\n');
+}

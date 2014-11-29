@@ -21,12 +21,3 @@ var E = {
     RECOVER: 6,
 };
 
-var COLORMAP = {};
-COLORMAP[E.HEALTHY] = 'white';
-COLORMAP[E.EXPOSE] = 'yellow';
-COLORMAP[E.INFECT] = 'orange';
-COLORMAP[E.SYMPTOM] = '#8C001A';
-COLORMAP[E.DEATH] = 'black';
-COLORMAP[E.HOSPITAL] = 'blue';
-COLORMAP[E.RECOVER] = 'pink';
-

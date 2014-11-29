@@ -17,6 +17,7 @@ var SimViewController = function (el, m, n, eventHistory) {
 
     this.epsRate = 120;
     this.simview.$('.event-rate-slider').slider('value', this.epsRate);
+    this.updateEPSView();
 
     this.startUpdateTimer();
 };
@@ -63,7 +64,7 @@ SimViewController.prototype.stepForward = function() {
 
         var eh = this.eventHistory[this.curI];
         var ef = eh[0], stateCount = eh[1];
-        this.simview.plv.changeColor(ef.i, ef.j, COLORMAP[ef.type]);
+        this.simview.plv.changeToState(ef.i, ef.j, ef.type);
 
         //this.simview.$('.event-rate-slider').slider('value', this.curI);
         return false;
@@ -77,19 +78,24 @@ SimViewController.prototype.stepBackward = function() {
         var e0 = eh[0];
 
         // undo the old event
-        this.simview.plv.changeColor(e0.i, e0.j, COLORMAP[e0.oldState]);
+        this.simview.plv.changeToState(e0.i, e0.j, e0.oldState);
 
         this.curI --;
 
         // apply previous event
         eh = this.eventHistory[this.curI];
         var ef = eh[0], stateCount = eh[1];
-        this.simview.plv.changeColor(ef.i, ef.j, COLORMAP[ef.type]);
+        this.simview.plv.changeToState(ef.i, ef.j, ef.type);
 
         // this.simview.$('.event-rate-slider').slider('value', this.curI);
         return false;
     }
     return true;
+};
+
+
+SimViewController.prototype.updateEPSView = function() {
+    this.simview.$('.eventrateview').html(this.epsRate + ' events per second.');
 };
 
 SimViewController.prototype.onSlide = function(e, ui) {
@@ -110,5 +116,6 @@ SimViewController.prototype.onSlide = function(e, ui) {
     if (oldRate * this.epsRate < 0) {
         this.startUpdateTimer();
     }
+    this.updateEPSView();
 
 };

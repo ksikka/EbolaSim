@@ -1,13 +1,30 @@
 /* UI Code */
+var CLASSMAP = {};
+CLASSMAP[E.HEALTHY] = 'l-healthy';
+CLASSMAP[E.EXPOSE] = 'l-exposed';
+CLASSMAP[E.INFECT] = 'l-infected';
+CLASSMAP[E.SYMPTOM] = 'l-symptomatic';
+CLASSMAP[E.DEATH] = 'l-dead';
+CLASSMAP[E.HOSPITAL] = 'l-hospitalized';
+CLASSMAP[E.RECOVER] = 'l-recovered';
+
 var LatticeView = Backbone.View.extend({
 
     initialize: function(opts) {
         this.m = opts.m;
         this.n = opts.n;
+        this.states = _.map(_.range(opts.m), function(i) {
+            return _.map(_.range(opts.n), function(j) {
+                return E.HEALTHY;
+            });
+        });
     },
 
-    changeColor: function(i,j,color) {
-        this.$('tr:nth-child('+(i+1)+') td:nth-child('+(j+1)+')').css('background-color',color);
+    changeToState: function(i,j,state) {
+        var $cell = this.$('tr:nth-child('+(i+1)+') td:nth-child('+(j+1)+')');
+        $cell.removeClass(CLASSMAP[this.states[i][j]]);
+        this.states[i][j] = state;
+        $cell.addClass(CLASSMAP[this.states[i][j]]);
     },
 
     drawGrid: function() {
@@ -38,14 +55,6 @@ var SimView = Backbone.View.extend({
         this.n = opts.n;
     },
 
-    events: {
-        "click .play-alt": "clickPlay"
-    },
-
-    clickPlay: function() {
-        alert('yo');
-    },
-
     updateTimeView: function(t) {
         // t is number of hours
         var days = Math.floor(t/24);
@@ -61,24 +70,10 @@ var SimView = Backbone.View.extend({
     },
 
     updateStateCountView: function(stateCount) {
-        this.$('.statecountview').html('');
-        var $t = $('<table>'), $tr;
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Healthy:</td><td>'+stateCount[E.HEALTHY]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Exposed:</td><td>'+stateCount[E.EXPOSE]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Infected:</td><td>'+stateCount[E.INFECT]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Symptomatic:</td><td>'+stateCount[E.SYMPTOM]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Hospitalized:</td><td>'+stateCount[E.HOSPITAL]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Dead:</td><td>'+stateCount[E.DEATH]+'</td>');
-        $tr = $('<tr></tr>').appendTo($t);
-        $tr.append('<td>Recovered:</td><td>'+stateCount[E.RECOVER]+'</td>');
-
-        this.$('.statecountview').append($t);
+        var self = this;
+        _.each(CLASSMAP, function(classname, state) {
+            self.$('.'+classname+'-count').html(stateCount[state]);
+        });
     },
 
     render: function() {

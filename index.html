@@ -22,11 +22,6 @@
             }
         </style>
         <style>
-            .controls-section {
-                width: 170px;
-                margin-left:auto;
-                margin-right:auto;
-            }
             .event-rate-slider {
                 width: 100%;
             }
@@ -35,6 +30,8 @@
                 box-sizing: border-box;
                 border-collapse: collapse;
             }
+
+            .legend td.color,
             .simulation-lattice td,
             .simulation-lattice tr,
             .simulation-lattice th {
@@ -43,19 +40,28 @@
                 border:1px solid black;
             }
             @media screen and (min-width: 48em) {
+                .legend td.color,
                 .simulation-lattice td,
                 .simulation-lattice tr,
                 .simulation-lattice th {
                     padding:0.6vw;
                 }
             }
-            .event-stream-item {
-                max-height:20px;
+
+
+            .l-healthy { background-color: white; }
+            .l-exposed { background-color: yellow; }
+            .l-infected { background-color: orange; }
+            .l-symptomatic { background-color: #8C001A; }
+            .l-hospitalized { background-color: blue; }
+            .l-recovered { background-color: pink; }
+            .l-dead { background-color: black; }
+
+            textarea.data {
+                font-family: Consolas, "courier new";
+                font-size: 10pt;
             }
-            .event-stream-view {
-                max-height: 120px;
-                overflow: scroll;
-            }
+
         </style>
         <script src="libs/jquery-1.11.1.min.js"></script>
         <script src="libs/jquery-ui-1.11.2.custom/jquery-ui.min.js"></script>
@@ -73,29 +79,42 @@
         <div id="simulation-container" class="pure-g">
             <!-- Left 2/3 -->
             <div class="pure-u-1 pure-u-md-2-3">
+
                 <h2>Hospital</h2>
-                <div class="hosp-lattice"></div>
+                    <div class="hosp-lattice"></div>
+
                 <h2>Population</h2>
-                <div class="pop-lattice"></div>
-                <h2>Controls</h2>
-                    <div class="timeview"></div>
-                    <div class="event-rate-slider"></div>
-                    <!--<div class="controls-section">
-                        <li class="frewind"><a href="#">&nbsp;</a></li>
-                        <li class="prev"><a href="#">&nbsp;</a></li>
-                        <li class="play-alt"><a href="#">&nbsp;</a></li>
-                        <li class="next"><a href="#">&nbsp;</a></li>
-                        <li class="fforward"><a href="#">&nbsp;</a></li>
-                    </div>-->
+                    <div class="pop-lattice"></div>
+
             </div>
             <!-- Right 1/3 -->
             <div class="pure-u-1 pure-u-md-1-3">
+
+                <h2>Rate</h2>
+                    <div class="eventrateview"></div>
+                    <div class="event-rate-slider"></div>
+
                 <h2>State</h2>
-                <div class="timeview"></div>
-                <div class="statecountview"></div>
+                    <div class="timeview"></div>
+                    <div class="statecountview">
+                        <table class="legend">
+                        <tr><td class="color l-healthy"></td><td>Healthy:</td><td class="l-healthy-count">0</td></tr>
+                        <tr><td class="color l-exposed"></td><td>Exposed:</td><td class="l-exposed-count">0</td></tr>
+                        <tr><td class="color l-infected"></td><td>Infected:</td><td class="l-infected-count">0</td></tr>
+                        <tr><td class="color l-symptomatic"></td><td>Symptomatic:</td><td class="l-symptomatic-count">0</td></tr>
+                        <tr><td class="color l-hospitalized"></td><td>Hospitalized:</td><td class="l-hospitalized-count">0</td></tr>
+                        <tr><td class="color l-recovered"></td><td>Recovered:</td><td class="l-recovered-count">0</td></tr>
+                        <tr><td class="color l-dead"></td><td>Dead:</td><td class="l-dead-count">0</td></tr>
+                        </table>
+                    </div>
+
+                <h2>Data Export</h2>
+                    <textarea class="data" readonly></textarea>
+
+                <!--
                 <h2>Event stream</h2>
-                <p>Coming soon</p>
-                <div class="event-stream-view"></div>
+                    <p>Coming soon</p>
+                    -->
             </div>
         </div>
         <script>
@@ -106,6 +125,7 @@
             s = new Simulation(m, n);
             s.simulate();
             var svc = new SimViewController($('#simulation-container'), m, n, s.eventHistory);
+            $('textarea.data').text(s.exportCSV());
         });
         </script>
     </body>
