@@ -22,6 +22,8 @@ var SimViewController = function (el, m, n, eventHistory) {
 };
 
 SimViewController.prototype.startUpdateTimer = function() {
+    if (this.updateTimer !== undefined) return;
+
     var self = this;
     this.updateTimer = window.setInterval(function() {
         // events per frame
@@ -48,10 +50,10 @@ SimViewController.prototype.startUpdateTimer = function() {
 };
 
 SimViewController.prototype.stopUpdateTimer = function() {
-    if (this.updateTimer !== undefined) {
-        window.clearInterval(this.updateTimer);
-        delete this.updateTimer;
-    }
+    if (this.updateTimer === undefined) return;
+
+    window.clearInterval(this.updateTimer);
+    delete this.updateTimer;
 };
 
 SimViewController.prototype.stepForward = function() {
@@ -94,11 +96,19 @@ SimViewController.prototype.onSlide = function(e, ui) {
     var oldRate = this.epsRate;
     this.epsRate = ui.value;
     // save some CPU cycles by turning off the timer if new rate is 0
+    if (this.epsRate === 0 && oldRate !== 0) {
+        this.stopUpdateTimer();
+    }
     if (oldRate === 0 && this.epsRate !== 0) {
         this.startUpdateTimer();
     }
-    if (this.epsRate === 0 && oldRate !== 0) {
-        this.stopUpdateTimer();
+    // timer may also be stopped because of boundary condition
+    // if the rate was negative, then the user touches to positive,
+    // the rate will skip 0, and above logic wont work
+    // detect this by checking if the rate's sign differ.
+    // if the rate's signs differ, then their product will be negative
+    if (oldRate * this.epsRate < 0) {
+        this.startUpdateTimer();
     }
 
 };
