@@ -29,10 +29,16 @@
             .simulation-lattice td,
             .simulation-lattice tr,
             .simulation-lattice th {
-                min-width:8px;
-                height:6px;
-                line-height:6px;
+                padding:1vw;
+                line-height:0px;
                 border:1px solid black;
+            }
+            @media screen and (min-width: 48em) {
+                .simulation-lattice td,
+                .simulation-lattice tr,
+                .simulation-lattice th {
+                    padding:0.6vw;
+                }
             }
             .event-stream-item {
                 max-height:20px;
@@ -47,10 +53,11 @@
         <script src="libs/underscore-min.js"></script>
         <script src="libs/backbone-min.js"></script>
         <script src="libs/jquery.ui.touch-punch.min.js"></script>
+
+        <script src="utils.js"></script>
         <script src="SimView.js"></script>
         <script src="SimViewController.js"></script>
         <script src="EbolaSim.js"></script>
-        <script src="utils.js"></script>
     </head>
     <body>
         <!-- SimView promises only to modify .lattice, .timeview, .event-rate-slider, .statecountview -->

@@ -16,7 +16,7 @@ var LatticeView = Backbone.View.extend({
         _.times(self.m, function(i) {
             $r = $('<tr></tr>');
             _.times(self.n, function(j) {
-                $('<td>&nbsp;</td>').appendTo($r);
+                $('<td></td>').appendTo($r);
             });
             $r.appendTo($t);
         });
