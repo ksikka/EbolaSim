@@ -12,26 +12,30 @@ var SimViewController = function (el, m, n, eventHistory) {
     // event rate slider initialization
     var self = this;
     var FPS = 30; this.FPS = FPS;
-    var stepSize = 10; this.stepSize = stepSize;
+    var stepSize = 20; this.stepSize = stepSize;
     this.simview.configureSlider(-1 * stepSize * FPS, stepSize * FPS, stepSize, function(arg1,arg2) { return self.onSlide(arg1,arg2); });
 
     this.epsRate = 120;
     this.simview.$('.event-rate-slider').slider('value', this.epsRate);
 
-    this.goToZero();
-    this.play();
+    this.startUpdateTimer();
 };
 
-SimViewController.prototype.play = function() {
+SimViewController.prototype.startUpdateTimer = function() {
     var self = this;
     this.updateTimer = window.setInterval(function() {
         // events per frame
         var EPF = self.epsRate / self.FPS;
+        var reachedBoundary;
         for (var i = 0; i < Math.abs(EPF); i ++) {
             if (EPF < 0) {
-                self.stepBackward();
+                reachedBoundary = self.stepBackward();
             } else {
-                self.stepForward();
+                reachedBoundary = self.stepForward();
+            }
+            if (reachedBoundary) {
+                self.stopUpdateTimer(); // save some CPU cycles. timer will be started again when epsRate goes the other way.
+                break;
             }
         }
 
@@ -40,12 +44,18 @@ SimViewController.prototype.play = function() {
         self.simview.updateTimeView(e.t);
         self.simview.updateStateCountView(stateCount);
 
-    }, 1000 / self.FPS)
+    }, 1000 / self.FPS);
+};
+
+SimViewController.prototype.stopUpdateTimer = function() {
+    if (this.updateTimer !== undefined) {
+        window.clearInterval(this.updateTimer);
+        delete this.updateTimer;
+    }
 };
 
 SimViewController.prototype.stepForward = function() {
     if (this.curI < (this.eventHistory.length - 1)) {
-        console.log('moving forward');
         // apply next event.
         this.curI ++;
 
@@ -80,26 +90,15 @@ SimViewController.prototype.stepBackward = function() {
     return true;
 };
 
-SimViewController.prototype.goToTime = function(t) {
-    /* Update to the last event where time = t. */
-    var goLeft = t < this.curI;
-    while (this.curI != t) {
-        var reachedBoundary;
-        if (goLeft) {
-            reachedBoundary = this.stepBackward();
-        } else {
-            reachedBoundary = this.stepForward();
-        }
-        if (reachedBoundary)
-            break;
+SimViewController.prototype.onSlide = function(e, ui) {
+    var oldRate = this.epsRate;
+    this.epsRate = ui.value;
+    // save some CPU cycles by turning off the timer if new rate is 0
+    if (oldRate === 0 && this.epsRate !== 0) {
+        this.startUpdateTimer();
+    }
+    if (this.epsRate === 0 && oldRate !== 0) {
+        this.stopUpdateTimer();
     }
 
-};
-
-SimViewController.prototype.goToZero = function() {
-    this.goToTime(0);
-};
-
-SimViewController.prototype.onSlide = function(e, ui) {
-    this.epsRate = ui.value;
 };
