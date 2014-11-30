@@ -13,16 +13,18 @@ var sampleTimeToInfection = function() {
     return contactsTillTransmission * avgTimeBetweenContacts;
 };
 var sampleTimeToHospital = function() {
-    // 2.5 days, with a variance of 2.
-    return sampleNormal(2.5,Math.pow(2,2)) * 24;
+    // 3.24 days, with a variance of 2.
+    return sampleNormal(3.24,Math.pow(2,2)) * 24;
 };
 var sampleTimeToRecover = function() {
-    // 12 - 16 days
-    return sampleNormal(14, Math.pow(2,2)) * 24;
+    // 15.88 days
+    // note that this is from hospital to recovery.
+    return sampleNormal(15.88, Math.pow(4,2)) * 24;
 };
 var sampleTimeToDeath = function() {
-    // 10 - 14 days
-    return sampleNormal(12, Math.pow(2,2)) * 24;
+    // 6.26 - 10.07 days
+    // note that this is from hospital to death.
+    return sampleNormal((6.26+10.07)/2, Math.pow(4,2)) * 24;
 };
 
 var Simulation = function (m,n) {
@@ -66,6 +68,16 @@ Simulation.prototype.set = function(e) {
     this.eventHistory.push([e, stateCount]);
 };
 
+Simulation.prototype.invalidateAllEvents = function(i,j) {
+    if (_.isEmpty(this.eventQueue))
+        return null;
+    var oldLen = this.eventQueue.length;
+    this.eventQueue = _.reject(this.eventQueue, function(e) {
+        return (i == e.i) && (j == e.j);
+    });
+    return oldLen - this.eventQueue.length;
+};
+
 Simulation.prototype.getNextEvent = function(i,t) {
     if (_.isEmpty(this.eventQueue))
         return null;
@@ -97,6 +109,7 @@ Simulation.prototype.processEvent = function(e) {
         case E.INFECT:
             /* invalidate all events on i,j
              * sample time till Symptomatic */
+            this.invalidateAllEvents()
             var t_s = sampleTimeToSymptomatic();
             this.eventQueue.push({i: e.i, j: e.j, type: E.SYMPTOM, t: e.t + t_s});
             break;
@@ -105,17 +118,8 @@ Simulation.prototype.processEvent = function(e) {
                sample time till Death directly prop to time till hosp
                sample time till Recover inverse prop to time till hosp */
             var t_h = sampleTimeToHospital();
-            var t_d = sampleTimeToDeath();
-            var t_r = sampleTimeToRecover();
-            /* if time to recover < time to death, gen recover event, else gen death event */
-            if (t_r < t_d)
-                this.eventQueue.push({i: e.i, j: e.j, type: E.RECOVER, t: e.t + t_r});
-            else
-                this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
 
-            /* if time to hospital < min(time to recover, time to die), gen hospital event. */
-            if (t_h < Math.min(t_r, t_d))
-                this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
+            this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
 
             /* Change state of healthy neighbors to exposed */
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
@@ -123,21 +127,31 @@ Simulation.prototype.processEvent = function(e) {
                 var i = x[0], j = x[1];
                 self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
             })
+
             /* for all exposed neighbors, sample time till infected.
              * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
             _.each(healthyNbrs, function(x) {
                 var t_infect = sampleTimeToInfection();
-                if (t_infect < Math.min(t_h, t_r, t_d + BURY_TIME)) {
+                if (t_infect < t_h) {
                     self.eventQueue.push({i:x[0],j:x[1],type:E.INFECT,t:e.t + t_infect});
                 }
             })
             break;
-        case E.DEATH:
-            break;
         case E.HOSPITAL:
+            var t_r = sampleTimeToRecover();
+            var t_d = sampleTimeToDeath();
+            /* if time to recover < time to death, gen recover event, else gen death event */
+            if (t_r < t_d)
+                this.eventQueue.push({i: e.i, j: e.j, type: E.RECOVER, t: e.t + t_r});
+            else
+                this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
+
             // TODO generation infect events in hospital.
+
             break;
         case E.RECOVER:
+            break;
+        case E.DEATH:
             break;
         default:
             alert('no');
@@ -167,7 +181,7 @@ Simulation.prototype.simulate = function() {
 
 Simulation.prototype.exportCSV = function () {
     var csvLines = [];
-    csvLines.push('time,healthy,exposed,infected,symptomatic,hospitalized,recovered,dead');
+    csvLines.push('time	healthy	exposed	infected	symptomatic	hospitalized	recovered	dead');
 
     // copies then reverses
     var reversedHistory = this.eventHistory.slice();
@@ -182,7 +196,7 @@ Simulation.prototype.exportCSV = function () {
                        stateCount[E.SYMPTOM],
                        stateCount[E.HOSPITAL],
                        stateCount[E.RECOVER],
-                       stateCount[E.DEATH]].join(','));
+                       stateCount[E.DEATH]].join('\t'));
     });
 
     return csvLines.join('\n');

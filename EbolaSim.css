@@ -33,6 +33,8 @@
 .l-recovered { background-color: pink; }
 .l-dead { background-color: black; }
 
+.l-hidden { visibility: hidden; }
+
 textarea.data {
     font-family: Consolas, "courier new";
     font-size: 10pt;
