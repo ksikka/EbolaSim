@@ -8,8 +8,10 @@ var sampleTimeToSymptomatic = function() {
     return (Math.random() * (21-2) + 2) * 24;
 };
 var sampleTimeToInfection = function() {
+    // similar to the attack rate. smaller time is stronger attack rate.
+    // intimate contact once every 6 days, 1/10th chance of transmission, these are completely made up params.
     var avgTimeBetweenContacts = Math.random() * 6 * 24;
-    var contactsTillTransmission = sampleGeom(1/4);
+    var contactsTillTransmission = sampleGeom(1/10);
     return contactsTillTransmission * avgTimeBetweenContacts;
 };
 var sampleTimeToInfectionHC = function() {
@@ -157,7 +159,7 @@ Simulation.prototype.processEvent = function(e) {
             this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
 
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {
-                return self.states[x[0]][x[1]] === E.HEALTHY || self.states[x[0]][x[1]] === E.EXPOSE;
+                return (self.states[x[0]][x[1]] === E.HEALTHY) || (self.states[x[0]][x[1]] === E.EXPOSE);
             });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
