@@ -27,7 +27,11 @@ var LatticeView = Backbone.View.extend({
 
     changeToState: function(i,j,state) {
         var $cell = this.$cell(i,j);
+        try{
         $cell.removeClass(CLASSMAP[this.states[i][j]]);
+        } catch (e){
+            console.log(i + ' '+ j);
+        }
         this.states[i][j] = state;
         $cell.addClass(CLASSMAP[this.states[i][j]]);
     },

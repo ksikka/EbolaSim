@@ -1,4 +1,6 @@
 var SimViewController = function (el, m, n, eventHistory) {
+
+    this.m = m;
     if (eventHistory.length === 0)
         alert('Empty simulation.')
 
@@ -57,6 +59,14 @@ SimViewController.prototype.stopUpdateTimer = function() {
     delete this.updateTimer;
 };
 
+SimViewController.prototype.applyStateToIJ = function(i,j,type) {
+    if (i === this.m) {
+        this.simview.hlv.changeToState(0, j, type);
+    } else {
+        this.simview.plv.changeToState(i, j, type);
+    }
+};
+
 SimViewController.prototype.stepForward = function() {
     if (this.curI < (this.eventHistory.length - 1)) {
         // apply next event.
@@ -64,9 +74,8 @@ SimViewController.prototype.stepForward = function() {
 
         var eh = this.eventHistory[this.curI];
         var ef = eh[0], stateCount = eh[1];
-        this.simview.plv.changeToState(ef.i, ef.j, ef.type);
+        this.applyStateToIJ(ef.i, ef.j, ef.type);
 
-        //this.simview.$('.event-rate-slider').slider('value', this.curI);
         return false;
     }
     return true;
@@ -78,16 +87,15 @@ SimViewController.prototype.stepBackward = function() {
         var e0 = eh[0];
 
         // undo the old event
-        this.simview.plv.changeToState(e0.i, e0.j, e0.oldState);
+        this.applyStateToIJ(e0.i, e0.j, e0.oldState);
 
         this.curI --;
 
         // apply previous event
         eh = this.eventHistory[this.curI];
         var ef = eh[0], stateCount = eh[1];
-        this.simview.plv.changeToState(ef.i, ef.j, ef.type);
+        this.applyStateToIJ(ef.i, ef.j, ef.type);
 
-        // this.simview.$('.event-rate-slider').slider('value', this.curI);
         return false;
     }
     return true;

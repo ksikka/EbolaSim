@@ -2,15 +2,19 @@
 
 /* Probability distributions for events */
 var BURY_TIME = 1 * 24; // 1 day
+var HCWASSIGNED = 2; // assign 2 hcw to a patient
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
     return (Math.random() * (21-2) + 2) * 24;
 };
 var sampleTimeToInfection = function() {
-    // 1.5 days
     var avgTimeBetweenContacts = Math.random() * 6 * 24;
     var contactsTillTransmission = sampleGeom(1/4);
     return contactsTillTransmission * avgTimeBetweenContacts;
+};
+var sampleTimeToInfectionHC = function() {
+    // for a healthcare worker, takes about twice as long for transmission to occur.
+    return 2 * sampleTimeToInfection();
 };
 var sampleTimeToHospital = function() {
     // 3.24 days, with a variance of 2.
@@ -32,9 +36,12 @@ var Simulation = function (m,n) {
     this.n = n;
     this.eventQueue = [];
 
-    // m x n of healthy
-    this.states = _.map(_.range(m), function() {
-        return _.map(_.range(n), function() {
+    // (m+1) x n of healthy
+    // represents an augmented matrix
+    // where first m rows is community
+    // and last row is hospital
+    this.states = _.map(_.range(m+1), function () {
+        return _.map(_.range(n), function () {
             return E.HEALTHY;
         });
     });
@@ -47,6 +54,16 @@ var Simulation = function (m,n) {
     this.stateCount[E.DEATH] = 0;
     this.stateCount[E.HOSPITAL] = 0;
     this.stateCount[E.RECOVER] = 0;
+
+    // counts for healthcare workers.
+    this.hospStateCount = {};
+    this.hospStateCount[E.HEALTHY] = n;
+    this.hospStateCount[E.EXPOSE] = 0;
+    this.hospStateCount[E.INFECT] = 0;
+    this.hospStateCount[E.SYMPTOM] = 0;
+    this.hospStateCount[E.DEATH] = 0;
+    this.hospStateCount[E.HOSPITAL] = 0;
+    this.hospStateCount[E.RECOVER] = 0;
 
     this.eventHistory = [];
 };
@@ -87,10 +104,20 @@ Simulation.prototype.getNextEvent = function(i,t) {
 };
 
 Simulation.prototype.withinBounds = function(i,j) {
+    // NOTE that HCWs are not within bounds. this function is only to be used for normal people.
     return (0 <= i && i < this.m) && (0 <= j && j < this.n);
 };
 
+Simulation.prototype.isHCW = function(i) {
+    return (i === this.m);
+};
+
 Simulation.prototype.getNeighbors = function(i,j) {
+    // HCW is not spatial.
+    if (this.isHCW(i)) {
+        alert('no');
+        throw 'a fit';
+    }
     var nbrs = [];
     var self = this;
     var nbrs = _.filter([[i-1,j-1],[i-1,j],[i-1,j+1],
@@ -113,30 +140,41 @@ Simulation.prototype.processEvent = function(e) {
             var t_s = sampleTimeToSymptomatic();
             this.eventQueue.push({i: e.i, j: e.j, type: E.SYMPTOM, t: e.t + t_s});
             break;
+
         case E.SYMPTOM:
             /* sample time till Hospital
                sample time till Death directly prop to time till hosp
                sample time till Recover inverse prop to time till hosp */
+
+            // (if healthcare then they go to hosp immediately, and you're done with this case.)
             var t_h = sampleTimeToHospital();
+            if (this.isHCW(e.i)) {
+                this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t});
+                break;
+            }
+            // Since we broke in the HCW case, now the person is guaranteed to be in the community only.
 
             this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
 
-            /* Change state of healthy neighbors to exposed */
-            var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {return self.states[x[0]][x[1]] == E.HEALTHY });
+            var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {
+                return self.states[x[0]][x[1]] === E.HEALTHY || self.states[x[0]][x[1]] === E.EXPOSE;
+            });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
-                self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
-            })
+                /* Change state of healthy neighbors to exposed */
+                if (self.states[i][j] === E.HEALTHY) {
+                    self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
+                }
 
-            /* for all exposed neighbors, sample time till infected.
-             * generate infected events for each exposed neighbor if t < min(time to hospital, time to recover, time to death + BURY_TIME) . */
-            _.each(healthyNbrs, function(x) {
+                /* for all exposed neighbors, sample time till infected.
+                 * generate infected events for each exposed neighbor. */
                 var t_infect = sampleTimeToInfection();
                 if (t_infect < t_h) {
-                    self.eventQueue.push({i:x[0],j:x[1],type:E.INFECT,t:e.t + t_infect});
+                    self.eventQueue.push({i:i,j:j,type:E.INFECT,t:e.t + t_infect});
                 }
             })
             break;
+
         case E.HOSPITAL:
             var t_r = sampleTimeToRecover();
             var t_d = sampleTimeToDeath();
@@ -146,9 +184,24 @@ Simulation.prototype.processEvent = function(e) {
             else
                 this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
 
-            // TODO generation infect events in hospital.
+            var assignedHCWorkers = _.sample( _.filter(_.range(this.n), function(i) {
+                return (self.states[self.m][i] === E.HEALTHY) || (self.states[self.m][i] === E.EXPOSE);
+            }), HCWASSIGNED);
+            _.each(assignedHCWorkers, function(j) {
+                var i = self.m
+                if (self.states[self.m][j] === E.EXPOSE) {
+                    // Expose the ith healthcare worker.
+                    self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
+                }
+                var t_i = sampleTimeToInfectionHC();
+                if (t_i < Math.min(t_r, t_d)) {
+                    // Infect the ith healthcare worker.
+                    self.eventQueue.push({i:i,j:j,type:E.INFECT,t:e.t + t_i});
+                }
+            });
 
             break;
+
         case E.RECOVER:
             break;
         case E.DEATH:
@@ -156,7 +209,7 @@ Simulation.prototype.processEvent = function(e) {
         default:
             alert('no');
     }
-}
+};
 
 Simulation.prototype.runEventLoop = function(maxT) {
     var e;
@@ -164,7 +217,7 @@ Simulation.prototype.runEventLoop = function(maxT) {
     while (this.t < maxT && (e = this.getNextEvent())) {
         this.processEvent(e);
     }
-}
+};
 
 Simulation.prototype.simulate = function() {
 
@@ -180,6 +233,7 @@ Simulation.prototype.simulate = function() {
 };
 
 Simulation.prototype.exportCSV = function () {
+    // TODO update with healthcare data.
     var csvLines = [];
     csvLines.push('time	healthy	exposed	infected	symptomatic	hospitalized	recovered	dead');
 
@@ -201,3 +255,5 @@ Simulation.prototype.exportCSV = function () {
 
     return csvLines.join('\n');
 }
+
+
