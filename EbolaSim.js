@@ -1,36 +1,70 @@
 /* Simulation code */
 
 /* Probability distributions for events */
-var BURY_TIME = 1 * 24; // 1 day
+var INCUBATION_MIN = 2;
+var INCUBATION_MAX = 21;
+
+// entirely made up
+var COMM_CONTACT_PERIOD_MIN = 0.5;
+var COMM_CONTACT_PERIOD_MAX = 5;
+var COMM_TRANS_PR = 0.10;
+
+// entirely made up
 var HCWASSIGNED = 2; // assign 2 hcw to a patient
+var HOSP_TRANS_PR = 0.05;
+var HOSP_CONTACT_PERIOD = 2;
+
+// FROM PAPER
+var MEAN_TIME_TO_HOSP = 3.24;
+var STDEV_TIME_TO_HOSP = 2;
+
+var STDEV = 5.0;
+// FROM PAPER
+// note that this is from infection to recovery.
+var MEAN_TIME_TO_RECOVER = (15+20)/2;
+var STDEV_TIME_TO_RECOVER = STDEV;
+
+var MEAN_TIME_TO_DEATH = 13.35;
+var STDEV_TIME_TO_DEATH = STDEV;
+
+// note that this is from hosp to recovery.
+var MEAN_TIME_TO_HOSPRECOVER = 15.88;
+var STDEV_TIME_TO_HOSPRECOVER = STDEV;
+
+var MEAN_TIME_TO_HOSPDEATH = (6.26+10.07)/2;
+var STDEV_TIME_TO_HOSPDEATH = STDEV;
+
 var sampleTimeToSymptomatic = function() {
     // Uniform dist from 2 to 21 days
-    return (Math.random() * (21-2) + 2) * 24;
+    return sampleUniform(INCUBATION_MIN*24, INCUBATION_MAX*24);
 };
 var sampleTimeToInfection = function() {
     // similar to the attack rate. smaller time is stronger attack rate.
-    // intimate contact once every 6 days, 1/10th chance of transmission, these are completely made up params.
-    var avgTimeBetweenContacts = Math.random() * 6 * 24;
-    var contactsTillTransmission = sampleGeom(1/10);
+    // intimate contact once every 2-6 days, 1/10th chance of transmission, these are completely made up params.
+    var avgTimeBetweenContacts = sampleUniform(COMM_CONTACT_PERIOD_MIN*24, COMM_CONTACT_PERIOD_MAX*24);
+    var contactsTillTransmission = sampleGeom(COMM_TRANS_PR);
     return contactsTillTransmission * avgTimeBetweenContacts;
 };
 var sampleTimeToInfectionHC = function() {
-    // for a healthcare worker, takes about twice as long for transmission to occur.
-    return 2 * sampleTimeToInfection();
+    // for a healthcare worker
+    var avgTimeBetweenContacts = HOSP_CONTACT_PERIOD * 24;
+    var contactsTillTransmission = sampleGeom(HOSP_TRANS_PR);
+    return contactsTillTransmission * avgTimeBetweenContacts;
 };
 var sampleTimeToHospital = function() {
-    // 3.24 days, with a variance of 2.
-    return sampleNormal(3.24,Math.pow(2,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_HOSP, Math.pow(STDEV_TIME_TO_HOSP,2)) * 24;
 };
 var sampleTimeToRecover = function() {
-    // 15.88 days
-    // note that this is from hospital to recovery.
-    return sampleNormal(15.88, Math.pow(4,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_RECOVER, Math.pow(STDEV_TIME_TO_RECOVER,2)) * 24;
 };
 var sampleTimeToDeath = function() {
-    // 6.26 - 10.07 days
-    // note that this is from hospital to death.
-    return sampleNormal((6.26+10.07)/2, Math.pow(4,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_DEATH, Math.pow(STDEV_TIME_TO_DEATH,2)) * 24;
+};
+var sampleTimeToHospRecover = function() {
+    return sampleNormal(MEAN_TIME_TO_HOSPRECOVER, Math.pow(STDEV_TIME_TO_HOSPRECOVER,2)) * 24;
+};
+var sampleTimeToHospDeath = function() {
+    return sampleNormal(MEAN_TIME_TO_HOSPDEATH, Math.pow(STDEV_TIME_TO_HOSPDEATH,2)) * 24;
 };
 
 var Simulation = function (m,n) {
@@ -50,7 +84,6 @@ var Simulation = function (m,n) {
 
     this.stateCount = {};
     this.stateCount[E.HEALTHY] = m * n;
-    this.stateCount[E.EXPOSE] = 0;
     this.stateCount[E.INFECT] = 0;
     this.stateCount[E.SYMPTOM] = 0;
     this.stateCount[E.DEATH] = 0;
@@ -60,7 +93,6 @@ var Simulation = function (m,n) {
     // counts for healthcare workers.
     this.hospStateCount = {};
     this.hospStateCount[E.HEALTHY] = n;
-    this.hospStateCount[E.EXPOSE] = 0;
     this.hospStateCount[E.INFECT] = 0;
     this.hospStateCount[E.SYMPTOM] = 0;
     this.hospStateCount[E.DEATH] = 0;
@@ -76,15 +108,21 @@ Simulation.prototype.set = function(e) {
     var oldState = this.states[e.i][e.j];
     this.states[e.i][e.j] = e.type;
 
-    this.stateCount[oldState] --;
-    this.stateCount[e.type] ++;
+    if (this.isHCW(e.i)) {
+        this.hospStateCount[oldState] --;
+        this.hospStateCount[e.type] ++;
+    } else {
+        this.stateCount[oldState] --;
+        this.stateCount[e.type] ++;
+    }
 
     // For convenience in updating the UI, copy oldState to the event.
     e.oldState = oldState;
 
     // Store the info to be displayed on the UI later.
     var stateCount = _.clone(this.stateCount);
-    this.eventHistory.push([e, stateCount]);
+    var hospStateCount = _.clone(this.hospStateCount);
+    this.eventHistory.push([e, stateCount, hospStateCount]);
 };
 
 Simulation.prototype.invalidateAllEvents = function(i,j) {
@@ -138,7 +176,7 @@ Simulation.prototype.processEvent = function(e) {
         case E.INFECT:
             /* invalidate all events on i,j
              * sample time till Symptomatic */
-            this.invalidateAllEvents()
+            this.invalidateAllEvents(e.i, e.j);
             var t_s = sampleTimeToSymptomatic();
             this.eventQueue.push({i: e.i, j: e.j, type: E.SYMPTOM, t: e.t + t_s});
             break;
@@ -159,14 +197,10 @@ Simulation.prototype.processEvent = function(e) {
             this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
 
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {
-                return (self.states[x[0]][x[1]] === E.HEALTHY) || (self.states[x[0]][x[1]] === E.EXPOSE);
+                return (self.states[x[0]][x[1]] === E.HEALTHY);
             });
             _.each(healthyNbrs, function(x) {
                 var i = x[0], j = x[1];
-                /* Change state of healthy neighbors to exposed */
-                if (self.states[i][j] === E.HEALTHY) {
-                    self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
-                }
 
                 /* for all exposed neighbors, sample time till infected.
                  * generate infected events for each exposed neighbor. */
@@ -175,9 +209,7 @@ Simulation.prototype.processEvent = function(e) {
                     self.eventQueue.push({i:i,j:j,type:E.INFECT,t:e.t + t_infect});
                 }
             })
-            break;
 
-        case E.HOSPITAL:
             var t_r = sampleTimeToRecover();
             var t_d = sampleTimeToDeath();
             /* if time to recover < time to death, gen recover event, else gen death event */
@@ -186,15 +218,22 @@ Simulation.prototype.processEvent = function(e) {
             else
                 this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
 
+            break;
+
+        case E.HOSPITAL:
+            var t_r = sampleTimeToHospRecover();
+            var t_d = sampleTimeToHospDeath();
+            /* if time to recover < time to death, gen recover event, else gen death event */
+            if (t_r < t_d)
+                this.eventQueue.push({i: e.i, j: e.j, type: E.RECOVER, t: e.t + t_r});
+            else
+                this.eventQueue.push({i: e.i, j: e.j, type: E.DEATH, t: e.t + t_d});
+
             var assignedHCWorkers = _.sample( _.filter(_.range(this.n), function(i) {
-                return (self.states[self.m][i] === E.HEALTHY) || (self.states[self.m][i] === E.EXPOSE);
+                return (self.states[self.m][i] === E.HEALTHY);
             }), HCWASSIGNED);
             _.each(assignedHCWorkers, function(j) {
                 var i = self.m
-                if (self.states[self.m][j] === E.EXPOSE) {
-                    // Expose the ith healthcare worker.
-                    self.set({i:i,j:j,type:E.EXPOSE, t:e.t});
-                }
                 var t_i = sampleTimeToInfectionHC();
                 if (t_i < Math.min(t_r, t_d)) {
                     // Infect the ith healthcare worker.
@@ -205,8 +244,10 @@ Simulation.prototype.processEvent = function(e) {
             break;
 
         case E.RECOVER:
+            this.invalidateAllEvents(e.i, e.j);
             break;
         case E.DEATH:
+            this.invalidateAllEvents(e.i, e.j);
             break;
         default:
             alert('no');
@@ -237,7 +278,7 @@ Simulation.prototype.simulate = function() {
 Simulation.prototype.exportCSV = function () {
     // TODO update with healthcare data.
     var csvLines = [];
-    csvLines.push('time	healthy	exposed	infected	symptomatic	hospitalized	recovered	dead');
+    csvLines.push('time	s	e	i	r	h	f	s_h	e_h	i_h	r_h	h_h	f_h');
 
     // copies then reverses
     var reversedHistory = this.eventHistory.slice();
@@ -247,11 +288,10 @@ Simulation.prototype.exportCSV = function () {
         var stateCount = eh[1];
         csvLines.push([eh[0].t,
                        stateCount[E.HEALTHY],
-                       stateCount[E.EXPOSE],
                        stateCount[E.INFECT],
                        stateCount[E.SYMPTOM],
-                       stateCount[E.HOSPITAL],
                        stateCount[E.RECOVER],
+                       stateCount[E.HOSPITAL],
                        stateCount[E.DEATH]].join('\t'));
     });
 

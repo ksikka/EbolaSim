@@ -1,4 +1,8 @@
 /* Methods to sample fancy distributions */
+
+var sampleUniform = function(min, max) {
+    return (Math.random() * (max-min) + min);
+};
 var sampleNormal = function(mean, std) {
     return Math.random() * std + mean;
 };
@@ -13,7 +17,6 @@ var sampleGeom = function(p) {
 /* Enum for state types, which may also be used as event types. */
 var E = {
     HEALTHY: 0,
-    EXPOSE: 1,
     INFECT: 2,
     SYMPTOM: 3,
     DEATH: 4,

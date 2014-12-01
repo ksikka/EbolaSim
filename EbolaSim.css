@@ -38,4 +38,5 @@
 textarea.data {
     font-family: Consolas, "courier new";
     font-size: 10pt;
+    width:300px;
 }

@@ -17,7 +17,7 @@ var SimViewController = function (el, m, n, eventHistory) {
     var stepSize = 20; this.stepSize = stepSize;
     this.simview.configureSlider(-1 * stepSize * FPS, stepSize * FPS, stepSize, function(arg1,arg2) { return self.onSlide(arg1,arg2); });
 
-    this.epsRate = 120;
+    this.epsRate = 20;
     this.simview.$('.event-rate-slider').slider('value', this.epsRate);
     this.updateEPSView();
 
