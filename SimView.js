@@ -49,39 +49,6 @@ var LatticeView = Backbone.View.extend({
         this.$el.append($t);
     },
 
-    _createPartialRow: function() {
-        // hidden because you should only do this if the last partial row is full.
-        var $t = this.$('table');
-        var $r = $('<tr></tr>');
-        _.times(this.n, function() {
-            $('<td class="l-hidden"></td>').appendTo($r);
-        });
-        $r.appendTo($t);
-        this.numPartialRows ++;
-        this.partialI = 0; // index of the next PCell to unhide.
-    },
-
-    _unHideNextPCell: function () {
-        // If the last row is not a partial row,
-        // Or if the last row is full,
-        // create a new partial row
-        if (this.partialI === undefined || this.partialI >= this.n)
-            this._createPartialRow();
-
-        var i = this.m - 1 + this.numPartialRows;
-        var j = this.partialI;
-
-        this.$cell(i,j).removeClass('l-hidden');
-        this.partialI ++;
-    },
-
-    addCell: function() {
-        // This adds a cell to the bottom for the hospital
-        // patients. Supports partial rows.
-
-        this._unHideNextPCell();
-    },
-
     render: function() {
         this.$el.html('');
         this.$el.addClass('simulation-lattice');
