@@ -1,5 +1,7 @@
 /* Simulation code */
 
+var hasHospital = true;
+
 /* Probability distributions for events */
 var INCUBATION_MIN = 2;
 var INCUBATION_MAX = 21;
@@ -192,7 +194,9 @@ Simulation.prototype.processEvent = function(e) {
             }
             // Since we broke in the HCW case, now the person is guaranteed to be in the community only.
 
-            this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
+            if (hasHospital) {
+                this.eventQueue.push({i: e.i, j: e.j, type: E.HOSPITAL, t: e.t + t_h});
+            }
 
             var healthyNbrs = _.filter(this.getNeighbors(e.i,e.j), function(x) {
                 return (self.states[x[0]][x[1]] === E.HEALTHY);
@@ -283,14 +287,21 @@ Simulation.prototype.exportCSV = function () {
     reversedHistory.reverse();
 
     _.each(reversedHistory, function(eh) {
-        var stateCount = eh[1];
+        var stateCount = eh[1], hospStateCount = eh[2];
         csvLines.push([eh[0].t,
                        stateCount[E.HEALTHY],
                        stateCount[E.INFECT],
                        stateCount[E.SYMPTOM],
                        stateCount[E.RECOVER],
                        stateCount[E.HOSPITAL],
-                       stateCount[E.DEATH]].join('\t'));
+                       stateCount[E.DEATH], 
+                       hospStateCount[E.HEALTHY],
+                       hospStateCount[E.INFECT],
+                       hospStateCount[E.SYMPTOM],
+                       hospStateCount[E.RECOVER],
+                       hospStateCount[E.HOSPITAL],
+                       hospStateCount[E.DEATH], 
+        ].join('\t'));
     });
 
     return csvLines.join('\n');

@@ -84,7 +84,8 @@
             s.simulate();
             var svc = new SimViewController($('#simulation-container'), m, n, s.eventHistory);
             $('textarea.data').text(s.exportCSV());
-            /* Run this to run simulation 100 times and get the matlab data string out.
+            /*
+            // Run this to run simulation 100 times and get the matlab data string out.
             var m = 40;
             var n = 40;
             var k = 100;
@@ -97,8 +98,9 @@
             });
             var rowstrings = _.map(window.endStates, function(eh) {
                 var sc = eh[1]; hsc = eh[2];
-                var entries = [ sc[E.HEALTHY],  sc[E.INFECT],  sc[E.SYMPTOM],  sc[E.RECOVER],  sc[E.HOSPITAL],  sc[E.DEATH],
-                               hsc[E.HEALTHY], hsc[E.INFECT], hsc[E.SYMPTOM], hsc[E.RECOVER], hsc[E.HOSPITAL], hsc[E.DEATH]];
+                //var entries = [ sc[E.HEALTHY],  sc[E.INFECT],  sc[E.SYMPTOM],  sc[E.RECOVER],  sc[E.HOSPITAL],  sc[E.DEATH],
+                 //              hsc[E.HEALTHY], hsc[E.INFECT], hsc[E.SYMPTOM], hsc[E.RECOVER], hsc[E.HOSPITAL], hsc[E.DEATH]];
+                var entries = [ sc[E.HEALTHY],  sc[E.INFECT],  sc[E.SYMPTOM],  sc[E.RECOVER], sc[E.DEATH]];
                 return entries.join(',')
             });
             var matlabstring = '[' + rowstrings.join(';\n') + ']';
