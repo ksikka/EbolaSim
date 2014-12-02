@@ -1,0 +1,20 @@
+<html>
+    <head>
+        <script src="libs/jquery-1.11.1.min.js"></script>
+        <script src="ziggurat.js"></script>
+        <script src="utils.js"></script>
+    </head>
+    <body>
+                    <textarea class="data" readonly></textarea>
+        <script>
+        $('document').ready(function() {
+            var lols = [];
+            for (var i = 0; i < 1000; i++) {
+                lols.push(sampleNormal2());
+            }
+            $('textarea.data').text(lols.join(','));
+            //$('textarea.data').text('[' + lols.join(',') + ']');
+        });
+        </script>
+    </body>
+</html>

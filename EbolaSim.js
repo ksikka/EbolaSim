@@ -4,21 +4,19 @@
 var INCUBATION_MIN = 2;
 var INCUBATION_MAX = 21;
 
-// entirely made up
 var COMM_CONTACT_PERIOD_MIN = 0.5;
 var COMM_CONTACT_PERIOD_MAX = 5;
-var COMM_TRANS_PR = 0.10;
+var COMM_TRANS_PR = 0.15;
 
-// entirely made up
 var HCWASSIGNED = 2; // assign 2 hcw to a patient
 var HOSP_TRANS_PR = 0.05;
 var HOSP_CONTACT_PERIOD = 2;
 
 // FROM PAPER
 var MEAN_TIME_TO_HOSP = 3.24;
-var STDEV_TIME_TO_HOSP = 2;
+var STDEV_TIME_TO_HOSP = 1;
 
-var STDEV = 5.0;
+var STDEV = 6;
 // FROM PAPER
 // note that this is from infection to recovery.
 var MEAN_TIME_TO_RECOVER = (15+20)/2;
@@ -52,19 +50,19 @@ var sampleTimeToInfectionHC = function() {
     return contactsTillTransmission * avgTimeBetweenContacts;
 };
 var sampleTimeToHospital = function() {
-    return sampleNormal(MEAN_TIME_TO_HOSP, Math.pow(STDEV_TIME_TO_HOSP,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_HOSP, STDEV_TIME_TO_HOSP) * 24;
 };
 var sampleTimeToRecover = function() {
-    return sampleNormal(MEAN_TIME_TO_RECOVER, Math.pow(STDEV_TIME_TO_RECOVER,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_RECOVER, STDEV_TIME_TO_RECOVER) * 24;
 };
 var sampleTimeToDeath = function() {
-    return sampleNormal(MEAN_TIME_TO_DEATH, Math.pow(STDEV_TIME_TO_DEATH,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_DEATH, STDEV_TIME_TO_DEATH) * 24;
 };
 var sampleTimeToHospRecover = function() {
-    return sampleNormal(MEAN_TIME_TO_HOSPRECOVER, Math.pow(STDEV_TIME_TO_HOSPRECOVER,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_HOSPRECOVER, STDEV_TIME_TO_HOSPRECOVER) * 24;
 };
 var sampleTimeToHospDeath = function() {
-    return sampleNormal(MEAN_TIME_TO_HOSPDEATH, Math.pow(STDEV_TIME_TO_HOSPDEATH,2)) * 24;
+    return sampleNormal(MEAN_TIME_TO_HOSPDEATH, STDEV_TIME_TO_HOSPDEATH) * 24;
 };
 
 var Simulation = function (m,n) {

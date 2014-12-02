@@ -3,8 +3,9 @@
 var sampleUniform = function(min, max) {
     return (Math.random() * (max-min) + min);
 };
+z = new Ziggurat();
 var sampleNormal = function(mean, std) {
-    return Math.random() * std + mean;
+    return z.nextGaussian() * std + mean;
 };
 var sampleGeom = function(p) {
     var i = 0, x;
