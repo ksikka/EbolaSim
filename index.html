@@ -33,6 +33,7 @@
         <script src="SimView.js"></script>
         <script src="SimViewController.js"></script>
         <script src="EbolaSim.js"></script>
+        <title>EbolaSim</title>
     </head>
     <body>
         <!-- SimView promises only to modify .lattice, .timeview, .event-rate-slider, .statecountview -->
@@ -42,6 +43,7 @@
 
                 <h2>Population</h2>
                     <div class="pop-lattice"></div>
+                    <p>(Refresh to resimulate)
 
                 <h2>Healthcare Workers</h2>
                     <div class="hosp-lattice"></div>
@@ -72,6 +74,8 @@
                 <h2>Data Export</h2>
                     <p>Tab-delimited for easy copy-pasting into Excel</p>
                     <textarea class="data" readonly></textarea>
+                <h2>About</h2>
+                    <a href="https://github.com/ksikka/EbolaSim/">https://github.com/ksikka/EbolaSim/</a>
             </div>
         </div>
         <script>
