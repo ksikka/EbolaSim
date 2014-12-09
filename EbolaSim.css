@@ -20,7 +20,7 @@
     .simulation-lattice td,
     .simulation-lattice tr,
     .simulation-lattice th {
-        padding:0.6vw;
+        padding:0.8vmin;
     }
 }
 
